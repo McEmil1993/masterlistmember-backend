@@ -1,0 +1,5 @@
+import bcrypt from "bcryptjs";import jwt from "jsonwebtoken";import prisma from "../config/prisma.js";
+const safe=u=>{const {password,...x}=u;return x};
+const token=u=>jwt.sign({sub:u.id,username:u.username,role:u.role},process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRES_IN||"1d"});
+export async function login(req,res){try{const {username,password}=req.body;if(!username||!password)return res.status(422).json({message:"Username and password are required."});const u=await prisma.user.findFirst({where:{username,deletedAt:null}});if(!u||!(await bcrypt.compare(password,u.password)))return res.status(401).json({message:"Invalid username or password."});res.json({message:"Login successful.",token:token(u),user:safe(u)})}catch(e){console.error(e);res.status(500).json({message:"Login failed."})}}
+export async function me(req,res){const u=await prisma.user.findFirst({where:{id:Number(req.user.sub),deletedAt:null}});if(!u)return res.status(404).json({message:"User not found."});res.json(safe(u))}
