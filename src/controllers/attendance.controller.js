@@ -17,13 +17,16 @@ export const getAttendanceByDate = async (req, res) => {
       select: { id: true, fullname: true, studentId: true, position: true, gender: true, yearLevel: true }
     })
 
-    // Sort members: Senior first, then others alphabetically by name
+    // Sort members: Senior -> Middle -> Junior, then alphabetically by name
     members.sort((a, b) => {
-      const aIsSenior = a.position?.toLowerCase() === 'senior';
-      const bIsSenior = b.position?.toLowerCase() === 'senior';
+      const order = { 'senior': 1, 'middle': 2, 'junior': 3 };
+      const posA = (a.position || '').toLowerCase();
+      const posB = (b.position || '').toLowerCase();
 
-      if (aIsSenior && !bIsSenior) return -1;
-      if (!aIsSenior && bIsSenior) return 1;
+      const rankA = order[posA] || 99;
+      const rankB = order[posB] || 99;
+
+      if (rankA !== rankB) return rankA - rankB;
 
       return (a.fullname || '').localeCompare(b.fullname || '');
     })
