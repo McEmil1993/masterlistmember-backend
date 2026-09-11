@@ -19,7 +19,55 @@ model User {
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
   deletedAt  DateTime? @map("deleted_at")
+  officer    Officer?
 
   @@index([deletedAt])
   @@map("users")
+}
+
+model Member {
+  id         Int       @id @default(autoincrement())
+  studentId  String    @unique @db.VarChar(50)
+  fullname   String    @db.VarChar(150)
+  gender     String?   @db.VarChar(20)
+  position   String?   @db.VarChar(150)
+  yearLevel  String?   @db.VarChar(50)
+  email      String?    @db.VarChar(255)
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+  status     String    @default("active") @db.VarChar(50)
+  deletedAt  DateTime? @map("deleted_at")
+  officer    Officer?
+  attendances Attendance[]
+
+  @@index([deletedAt])
+  @@map("members")
+}
+
+model Officer {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  memberId  Int?     @unique
+  position  String   @unique @db.VarChar(150)
+  role      String   @db.VarChar(50)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  member    Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@map("officers")
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  memberId  Int
+  date      DateTime @db.Date
+  status    String   @db.VarChar(20) // 'present' | 'absent'
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, date])
+  @@map("attendance")
 }
